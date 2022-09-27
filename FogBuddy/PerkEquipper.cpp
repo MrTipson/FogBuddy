@@ -37,19 +37,27 @@ PerkEquipper::PerkEquipper() {
 		for (const fs::directory_entry& perk : fs::directory_iterator(entry.path())) {
 			std::string s = perk.path().filename().string();
 			perks.push_back(s);
+			killerPerks.push_back(perk.path().string());
 		}
 		std::string killer = entry.path().filename().string();
-		killerPerks.emplace(killer, perks);
+		killers.emplace(killer, perks);
 	}
 	for (const fs::directory_entry& entry : fs::directory_iterator("data/Survivors")) {
 		std::vector<std::string> perks;
 		for (const fs::directory_entry& perk : fs::directory_iterator(entry.path())) {
 			std::string s = perk.path().filename().string();
 			perks.push_back(s);
+			survivorPerks.push_back(perk.path().string());
 		}
 		std::string survivor = entry.path().filename().string();
-		survivorPerks.emplace(survivor, perks);
+		survivors.emplace(survivor, perks);
 	}
+	std::sort(killerPerks.begin(), killerPerks.end(), [](std::string a, std::string b) {
+		return a.substr(a.find_last_of("\\") + 1) < b.substr(b.find_last_of("\\") + 1);
+		});
+	std::sort(survivorPerks.begin(), survivorPerks.end(), [](std::string a, std::string b) {
+		return a.substr(a.find_last_of("\\") + 1) < b.substr(b.find_last_of("\\") + 1);
+		});
 }
 
 PerkEquipper::~PerkEquipper() {

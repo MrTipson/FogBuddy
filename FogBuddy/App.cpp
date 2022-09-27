@@ -130,26 +130,26 @@ int main(int argc, char** argv)
             ImGui::Checkbox("Show perks", &includePerks);
             if (sideToggle == 0) // Killer perks
             {
-                for (auto& it = perkEquipper.killerPerks.begin(); it != perkEquipper.killerPerks.end(); it++)
+                if (includePerks)
                 {
-                    std::string killer = it->first;
-                    std::vector<std::string> perks = it->second;
-                    if (includePerks)
+                    for (auto& it = perkEquipper.killerPerks.begin(); it != perkEquipper.killerPerks.end(); it++)
                     {
-                        for (auto& it = perks.begin(); it != perks.end(); it++)
-                        {
-                            std::string s = (*it).substr(0, (*it).find_first_of('.'));
-                            const char* cstr = s.c_str();
-                            if (filter.PassFilter(cstr)) {
-                                if (ImGui::MenuItem(cstr)) {
-                                    perkEquipper.equipPerk("data/Killers/" + killer + "/" + *it);
-                                }
+                        std::string s = (*it).substr((*it).find_last_of('\\') + 1);
+                        const char* cstr = s.c_str();
+                        if (filter.PassFilter(cstr)) {
+                            if (ImGui::MenuItem(cstr)) {
+                                perkEquipper.equipPerk(*it);
                             }
                         }
-
                     }
-                    if (includeCharacters)
+
+                }
+                if (includeCharacters)
+                {
+                    for (auto& it = perkEquipper.killers.begin(); it != perkEquipper.killers.end(); it++)
                     {
+                        std::string killer = it->first;
+                        std::vector<std::string> perks = it->second;
                         const char* cstr = killer.c_str();
                         if (filter.PassFilter(cstr))
                         {
@@ -170,25 +170,25 @@ int main(int argc, char** argv)
             }
             else if (sideToggle == 1) // Survivor perks
             {
-                for (auto& it = perkEquipper.survivorPerks.begin(); it != perkEquipper.survivorPerks.end(); it++)
+                if (includePerks)
                 {
-                    std::string survivor = it->first;
-                    std::vector<std::string> perks = it->second;
-                    if (includePerks)
+                    for (auto& it = perkEquipper.survivorPerks.begin(); it != perkEquipper.survivorPerks.end(); it++)
                     {
-                        for (auto& it = perks.begin(); it != perks.end(); it++)
-                        {
-                            std::string s = (*it).substr(0, (*it).find_first_of('.'));
-                            const char* cstr = s.c_str();
-                            if (filter.PassFilter(cstr)) {
-                                if (ImGui::MenuItem(cstr)) {
-                                    perkEquipper.equipPerk("data/Survivors/" + survivor + "/" + *it);
-                                }
+                        std::string s = (*it).substr((*it).find_last_of('\\') + 1);
+                        const char* cstr = s.c_str();
+                        if (filter.PassFilter(cstr)) {
+                            if (ImGui::MenuItem(cstr)) {
+                                perkEquipper.equipPerk(*it);
                             }
                         }
                     }
-                    if (includeCharacters)
+                }
+                if (includeCharacters)
+                {
+                    for (auto& it = perkEquipper.survivors.begin(); it != perkEquipper.survivors.end(); it++)
                     {
+                        std::string survivor = it->first;
+                        std::vector<std::string> perks = it->second;
                         const char* cstr = survivor.c_str();
                         if (filter.PassFilter(cstr))
                         {
