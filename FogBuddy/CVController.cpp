@@ -75,19 +75,26 @@ void CVController::findPages(cv::Mat screen) {
 }
 
 bool CVController::findPerk(cv::Mat screen, std::string perkPath, cv::Point& foundPerk) {
-	int offsets[] = { 0,1,2,3 };
+	int offsets[] = { -3,-2,-1,0,1,2,3 };
 
-	cv::Mat screenThresh, template_, thresholded, resized, resizedMask;
+	cv::Mat screenThresh, grayscale, template_, thresholded, resized, resizedMask;
 	cv::threshold(screen, screenThresh, 100, 255, cv::THRESH_TOZERO);
 
-	template_ = cv::imread(perkPath, cv::IMREAD_GRAYSCALE);
+	cv::Mat perk = cv::imread(perkPath, cv::IMREAD_UNCHANGED);
+	cv::cvtColor(perk, template_, cv::COLOR_BGR2GRAY);
+	std::vector<cv::Mat> channels(4);
+	cv::split(perk, channels);
+	template_ = template_.mul(channels[3]);
+	perk.release();
+
 	cv::Mat mask = cv::imread("data/mask.png", cv::IMREAD_GRAYSCALE);
 
 	cv::threshold(template_, thresholded, 100, 255, cv::THRESH_TOZERO);
 	template_.release();
+	
 	double opt_val = 1;
 	cv::Point opt_loc;
-	for (int i = 0; i < 4; i++) {
+	for (int i = 0; i < 7; i++) {
 		cv::Size newsize(perkWidth+offsets[i], perkWidth + offsets[i]);
 		cv::resize(thresholded, resized, newsize);
 		cv::resize(mask, resizedMask, newsize);
@@ -104,6 +111,7 @@ bool CVController::findPerk(cv::Mat screen, std::string perkPath, cv::Point& fou
 			opt_val = min_val;
 			opt_loc = min_loc;
 		}
+		// showMatch("Match " + std::to_string(min_val) + " " + std::to_string(offsets[i]), screen, min_loc, min_val);
 	}
 	screenThresh.release();
 	resized.release();
@@ -111,13 +119,7 @@ bool CVController::findPerk(cv::Mat screen, std::string perkPath, cv::Point& fou
 	thresholded.release();
 	mask.release();
 
-	
-	cv::Rect rect(opt_loc.x, opt_loc.y, perkWidth, perkWidth);
-	cv::Mat screen2 = screen.clone();
-	cv::rectangle(screen2, rect, cv::Scalar(255, 255, 255));
-	cv::namedWindow("Perk " + std::to_string(opt_val));
-	cv::imshow("Perk " + std::to_string(opt_val), screen2);
-	cv::waitKey(0);
+	// showMatch("Best match " + std::to_string(opt_val), screen, opt_loc, opt_val);
 
 	std::cout << opt_val << std::endl;
 	if (opt_val < 0.5)
@@ -129,6 +131,15 @@ bool CVController::findPerk(cv::Mat screen, std::string perkPath, cv::Point& fou
 		return true;
 	}
 	return false;
+}
+
+void CVController::showMatch(std::string title, cv::Mat screen, cv::Point loc, double val) {
+	cv::Rect rect(loc.x, loc.y, perkWidth, perkWidth);
+	cv::Mat screen2 = screen.clone();
+	cv::rectangle(screen2, rect, cv::Scalar(255, 255, 255));
+	cv::namedWindow(title);
+	cv::imshow(title, screen2);
+	screen2.release();
 }
 
 cv::Mat CVController::processedScreenshot(int* origWidth, int* origHeight) {

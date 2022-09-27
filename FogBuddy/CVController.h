@@ -9,6 +9,7 @@ private:
 	std::vector<cv::Point> pages;
 	void calibrate(cv::Mat screen);
 	void findPages(cv::Mat screen);
+	void showMatch(std::string title,  cv::Mat screen, cv::Point, double val);
 public:
 	CVController();
 	bool findPerk(cv::Mat screen, std::string perkPath, cv::Point& perk);
