@@ -11,6 +11,6 @@ private:
 	void findPages(cv::Mat screen);
 public:
 	CVController();
-	cv::Point findPerk(cv::Mat screen, std::string perkPath);
-	static cv::Mat processedScreenshot();
+	bool findPerk(cv::Mat screen, std::string perkPath, cv::Point& perk);
+	static cv::Mat processedScreenshot(int* origWidth = nullptr, int* origHeight = nullptr);
 };

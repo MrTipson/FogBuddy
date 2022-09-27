@@ -8,7 +8,8 @@ class PerkEquipper
 private:
 	CVController* controller;
 public:
-	std::vector<std::string> perks;
+	std::map<std::string, std::vector<std::string>> killerPerks;
+	std::map<std::string, std::vector<std::string>> survivorPerks;
 
 	PerkEquipper();
 	~PerkEquipper();

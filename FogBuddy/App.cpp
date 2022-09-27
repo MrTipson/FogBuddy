@@ -3,6 +3,9 @@
 #include "CVController.h"
 #include "PerkEquipper.h"
 
+// ImGui macro for adding keyboard maps
+#define MAP_KEY(NAV_NO, KEY_NO) { if (io.KeysDown[KEY_NO]) io.NavInputs[NAV_NO] = 1.0f; }
+
 // Data
 static ID3D11Device* g_pd3dDevice = NULL;
 static ID3D11DeviceContext* g_pd3dDeviceContext = NULL;
@@ -39,12 +42,12 @@ int main(int argc, char** argv)
     // Create application window
     //ImGui_ImplWin32_EnableDpiAwareness();
     WNDCLASSEX wc = { sizeof(WNDCLASSEX), CS_CLASSDC, WndProc, 0L, 0L, GetModuleHandle(NULL), NULL, NULL, CreateSolidBrush(RGB(0,0,0)), NULL, _T("ImGui Example"), NULL};
-    ::RegisterClassEx(&wc);
+    RegisterClassEx(&wc);
     int width = GetSystemMetrics(SM_CXSCREEN);
     int height = GetSystemMetrics(SM_CYSCREEN);
-    HWND hwnd = ::CreateWindowEx(WS_EX_TOPMOST | WS_EX_LAYERED, wc.lpszClassName, _T("FogBuddy overlay"), WS_POPUP, 0, 0, width, height, NULL, NULL, wc.hInstance, NULL);
+    HWND hwnd = CreateWindowEx(WS_EX_TOPMOST | WS_EX_LAYERED, wc.lpszClassName, _T("FogBuddy overlay"), WS_POPUP, 0, 0, width, height, NULL, NULL, wc.hInstance, NULL);
     SetLayeredWindowAttributes(hwnd, RGB(0,0,0), 0, LWA_COLORKEY);
-    HWND hwndDBD = ::FindWindow(_T("UnrealWindow"), _T("DeadByDaylight  "));
+    HWND hwndDBD = FindWindow(_T("UnrealWindow"), _T("DeadByDaylight  "));
     // std::cout << hwnd << std::endl;
     // Initialize Direct3D
     if (!CreateDeviceD3D(hwnd))
@@ -55,8 +58,8 @@ int main(int argc, char** argv)
     }
     
     // Show the window
-    ::ShowWindow(hwnd, SW_SHOWMAXIMIZED);
-    ::UpdateWindow(hwnd);
+    ShowWindow(hwnd, SW_SHOWMAXIMIZED);
+    UpdateWindow(hwnd);
 
     RegisterHotKey(hwnd, ID_OPEN_POPUP, MOD_ALT, 0x53); // alt-S
 
@@ -85,8 +88,8 @@ int main(int argc, char** argv)
         MSG msg;
         while (::PeekMessage(&msg, NULL, 0U, 0U, PM_REMOVE))
         {
-            ::TranslateMessage(&msg);
-            ::DispatchMessage(&msg);
+            TranslateMessage(&msg);
+            DispatchMessage(&msg);
             if (msg.message == WM_QUIT)
                 done = true;
         }
@@ -118,11 +121,89 @@ int main(int argc, char** argv)
                 ImGui::SetKeyboardFocusHere(-1);
                 focusFlag = false;
             }
-            for (std::vector<std::string>::iterator it = perkEquipper.perks.begin(); it != perkEquipper.perks.end(); it++) {
-                const char* cstr = it->c_str();
-                if (filter.PassFilter(cstr)) {
-                    if (ImGui::MenuItem(cstr)) {
-                        perkEquipper.equipPerk(*it);
+            static int sideToggle = 0;
+            ImGui::RadioButton("Killer", &sideToggle, 0); ImGui::SameLine();
+            ImGui::RadioButton("Survivor", &sideToggle, 1); ImGui::SameLine();
+            static bool includeCharacters = true;
+            ImGui::Checkbox("Show characters", &includeCharacters); ImGui::SameLine();
+            static bool includePerks = true;
+            ImGui::Checkbox("Show perks", &includePerks);
+            if (sideToggle == 0) // Killer perks
+            {
+                for (auto& it = perkEquipper.killerPerks.begin(); it != perkEquipper.killerPerks.end(); it++)
+                {
+                    std::string killer = it->first;
+                    std::vector<std::string> perks = it->second;
+                    if (includePerks)
+                    {
+                        for (auto& it = perks.begin(); it != perks.end(); it++)
+                        {
+                            std::string s = (*it).substr(0, (*it).find_first_of('.'));
+                            const char* cstr = s.c_str();
+                            if (filter.PassFilter(cstr)) {
+                                if (ImGui::MenuItem(cstr)) {
+                                    perkEquipper.equipPerk("data/Killers/" + killer + "/" + *it);
+                                }
+                            }
+                        }
+
+                    }
+                    if (includeCharacters)
+                    {
+                        const char* cstr = killer.c_str();
+                        if (filter.PassFilter(cstr))
+                        {
+                            if (ImGui::BeginMenu(cstr)) {
+                                for (auto& it = perks.begin(); it != perks.end(); it++)
+                                {
+                                    std::string s = (*it).substr(0, (*it).find_first_of('.'));
+                                    const char* cstr = s.c_str();
+                                    if (ImGui::MenuItem(cstr)) {
+                                        perkEquipper.equipPerk("data/Killers/" + killer + "/" + *it);
+                                    }
+                                }
+                                ImGui::EndMenu();
+                            }
+                        }
+                    }
+                }
+            }
+            else if (sideToggle == 1) // Survivor perks
+            {
+                for (auto& it = perkEquipper.survivorPerks.begin(); it != perkEquipper.survivorPerks.end(); it++)
+                {
+                    std::string survivor = it->first;
+                    std::vector<std::string> perks = it->second;
+                    if (includePerks)
+                    {
+                        for (auto& it = perks.begin(); it != perks.end(); it++)
+                        {
+                            std::string s = (*it).substr(0, (*it).find_first_of('.'));
+                            const char* cstr = s.c_str();
+                            if (filter.PassFilter(cstr)) {
+                                if (ImGui::MenuItem(cstr)) {
+                                    perkEquipper.equipPerk("data/Survivors/" + survivor + "/" + *it);
+                                }
+                            }
+                        }
+                    }
+                    if (includeCharacters)
+                    {
+                        const char* cstr = survivor.c_str();
+                        if (filter.PassFilter(cstr))
+                        {
+                            if (ImGui::BeginMenu(cstr)) {
+                                for (auto& it = perks.begin(); it != perks.end(); it++)
+                                {
+                                    std::string s = (*it).substr(0, (*it).find_first_of('.'));
+                                    const char* cstr = s.c_str();
+                                    if (ImGui::MenuItem(cstr)) {
+                                        perkEquipper.equipPerk("data/Survivors/" + survivor + "/" + *it);
+                                    }
+                                }
+                                ImGui::EndMenu();
+                            }
+                        }
                     }
                 }
             }

@@ -33,7 +33,7 @@ void CVController::calibrate(cv::Mat screen) {
 		}
 	}
 	std::sort(widths.begin(), widths.end());
-	perkWidth = widths.at((int)(1.3 * widths.size() / 2));
+	perkWidth = widths.at((int)(widths.size() / 2));
 	printf("[Calibration]: Perk width calculated @ %d\n", perkWidth);
 }
 
@@ -74,62 +74,81 @@ void CVController::findPages(cv::Mat screen) {
 	printf("[Calibration]: Found %d pages\n", pages.size());
 }
 
-cv::Point CVController::findPerk(cv::Mat screen, std::string perkPath) {
-	cv::Mat screenThresh;
+bool CVController::findPerk(cv::Mat screen, std::string perkPath, cv::Point& foundPerk) {
+	int offsets[] = { 0,1,2,3 };
+
+	cv::Mat screenThresh, template_, thresholded, resized, resizedMask;
 	cv::threshold(screen, screenThresh, 100, 255, cv::THRESH_TOZERO);
 
-	cv::Mat perk = cv::imread(perkPath, cv::IMREAD_UNCHANGED);
-	cv::Mat template_, thresholded, resized;
-	cv::cvtColor(perk, template_, cv::COLOR_BGR2GRAY);
-	
-	std::vector<cv::Mat> channels(4);
-	cv::split(perk, channels);
-	template_.mul(channels[3]);
-	perk.release();
+	template_ = cv::imread(perkPath, cv::IMREAD_GRAYSCALE);
+	cv::Mat mask = cv::imread("data/mask.png", cv::IMREAD_GRAYSCALE);
 
 	cv::threshold(template_, thresholded, 100, 255, cv::THRESH_TOZERO);
 	template_.release();
+	double opt_val = 1;
+	cv::Point opt_loc;
+	for (int i = 0; i < 4; i++) {
+		cv::Size newsize(perkWidth+offsets[i], perkWidth + offsets[i]);
+		cv::resize(thresholded, resized, newsize);
+		cv::resize(mask, resizedMask, newsize);
 
-	cv::Size newsize(perkWidth, perkWidth);
-	cv::resize(thresholded, resized, newsize);
+		cv::Mat match;
+		cv::matchTemplate(screenThresh, resized, match, cv::TM_SQDIFF_NORMED, resizedMask);
+
+		double min_val, max_val;
+		cv::Point min_loc, max_loc;
+		cv::minMaxLoc(match, &min_val, &max_val, &min_loc, &max_loc);
+
+		if (min_val < opt_val)
+		{
+			opt_val = min_val;
+			opt_loc = min_loc;
+		}
+	}
+	screenThresh.release();
+	resized.release();
+	resizedMask.release();
 	thresholded.release();
+	mask.release();
 
-	cv::Mat match, matchNMS;
-	cv::matchTemplate(screenThresh, resized, match, cv::TM_SQDIFF_NORMED);
-
-	double min_val, max_val;
-	cv::Point min_loc, max_loc;
-	cv::minMaxLoc(match, &min_val, &max_val, &min_loc, &max_loc);
-
+	
+	cv::Rect rect(opt_loc.x, opt_loc.y, perkWidth, perkWidth);
 	cv::Mat screen2 = screen.clone();
-	cv::Rect rect(min_loc.x, min_loc.y, perkWidth, perkWidth);
 	cv::rectangle(screen2, rect, cv::Scalar(255, 255, 255));
+	cv::namedWindow("Perk " + std::to_string(opt_val));
+	cv::imshow("Perk " + std::to_string(opt_val), screen2);
+	cv::waitKey(0);
 
-	cv::namedWindow("Perk");
-	cv::imshow("Perk", screen2);
-	return { 1, 2 };
+	std::cout << opt_val << std::endl;
+	if (opt_val < 0.5)
+	{
+		std::cout << "Found perk match (with error " << opt_val << ")\n";
+		opt_loc.x += (int)(perkWidth / 2);
+		opt_loc.y += (int)(perkWidth / 2);
+		foundPerk = opt_loc;
+		return true;
+	}
+	return false;
 }
 
-cv::Mat CVController::processedScreenshot() {
-	cv::Mat gray, blurred, cropped;
+cv::Mat CVController::processedScreenshot(int* origWidth, int* origHeight) {
+	cv::Mat gray, cropped;
 	cv::Mat screen = captureScreenshot();
 	int width = screen.cols;
 	int height = screen.rows;
+	if (origWidth != nullptr) *origWidth = width;
+	if (origHeight != nullptr) *origHeight = height;
 
 	cv::cvtColor(screen, gray, cv::COLOR_BGR2GRAY);
 	screen.release();
 
-	cv::Size kernelSize = cv::Size(5, 5);
-	cv::GaussianBlur(gray, blurred, kernelSize, 1);
-	gray.release();
-
 	int startX = 0, startY = (int)(height / 2), rectW = (int)(0.55 * width), rectH = (int)(height / 2);
 	cv::Rect window(startX, startY, rectW, rectH);
 
-	cv::Mat ROI(blurred, window);
+	cv::Mat ROI(gray, window);
 	cv::Mat croppedImage;
 	ROI.copyTo(croppedImage);
-	blurred.release();
+	gray.release();
 
 	return croppedImage;
 }

@@ -1,4 +1,5 @@
 #include "Interact.h"
+#include <iostream>
 #include <Windows.h>
 
 cv::Mat captureScreenshot() {
@@ -36,7 +37,7 @@ cv::Mat captureScreenshot() {
     // Create Mat object, which also allocates data buffer
     cv::Mat ret(height, width, CV_8UC3);
     // get the actual bitmap buffer
-    GetDIBits(hdcScreen, hBmp, 0, -MyBMInfo.bmiHeader.biHeight, (LPVOID) ret.ptr(), &MyBMInfo, DIB_RGB_COLORS);
+    GetDIBits(hdcScreen, hBmp, 0, -MyBMInfo.bmiHeader.biHeight, (LPVOID)ret.ptr(), &MyBMInfo, DIB_RGB_COLORS);
 
     //Clean Up
     ReleaseDC(0, hdcScreen);
@@ -47,6 +48,23 @@ cv::Mat captureScreenshot() {
     DeleteObject(hOldBmp);
 
     return ret;
+}
+
+void mouseClick() {
+    INPUT in[2];
+    in[0].type = INPUT_MOUSE;
+    in[0].mi.mouseData = 0;
+    in[0].mi.time = 0;
+    in[0].mi.dx = 0;
+    in[0].mi.dy = 0;
+    in[0].mi.dwFlags = (MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_LEFTDOWN);
+    in[1].type = INPUT_MOUSE;
+    in[1].mi.mouseData = 0;
+    in[1].mi.time = 0;
+    in[1].mi.dx = 0;
+    in[1].mi.dy = 0;
+    in[1].mi.dwFlags = (MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_LEFTUP);
+    SendInput(2, (LPINPUT) &in, sizeof(INPUT));
 }
 
 void mouseMove(int x, int y) {
@@ -60,16 +78,12 @@ void mouseMove(int x, int y) {
     SendInput(1, &input, sizeof(input));
 }
 
-void mouseClick() {
-    char code = 0x02; // Left click
-    INPUT input;
-    input.type = INPUT_MOUSE;
-    input.mi.mouseData = 0;
-    input.mi.time = 0;
-    input.mi.dx = 0;
-    input.mi.dy = 0;
-    input.mi.dwFlags = (MOUSEEVENTF_ABSOLUTE | code);
-    SendInput(1, &input, sizeof(INPUT));
-    input.mi.dwFlags = (MOUSEEVENTF_ABSOLUTE | (code << 1));
-    SendInput(1, &input, sizeof(INPUT));
+void moveAndClickDBD(int x, int y) {
+    HWND dbd = FindWindow(L"UnrealWindow", L"DeadByDaylight  ");
+    HWND old = GetForegroundWindow();
+    SetForegroundWindow(dbd);
+    mouseMove(x, y);
+    mouseClick();
+    Sleep(100);
+    std::cout << SetForegroundWindow(old) << std::endl;
 }
