@@ -15,6 +15,7 @@ CVController::CVController() {
 	croppedImage.release();
 }
 
+// Calculate expected perk width
 void CVController::calibrate(cv::Mat screen) {
 	cv::Mat thresholded, morbed;
 	cv::threshold(screen, thresholded, 15, 255, cv::THRESH_BINARY_INV);
@@ -36,11 +37,13 @@ void CVController::calibrate(cv::Mat screen) {
 			widths.push_back(stats.at<int>(i, cv::CC_STAT_WIDTH));
 		}
 	}
+	// Calculate median value
 	std::sort(widths.begin(), widths.end());
 	perkWidth = widths.at((int)(widths.size() / 2));
 	LOG_INFO("[Calibration]: Perk width calculated @ %d\n", perkWidth);
 }
 
+// Locates page buttons (below the perks)
 void CVController::findPages(cv::Mat screen) {
 	cv::Mat thresholded, morbed;
 
@@ -69,6 +72,7 @@ void CVController::findPages(cv::Mat screen) {
 	for (int i = 0; i < numLabels; i++)
 	{
 		int top = stats.at<int>(i, cv::CC_STAT_TOP);
+		// Only use the values that don't deviate too far from the median
 		if (abs(top - median) < 20)
 		{
 			int x = stats.at<int>(i, cv::CC_STAT_LEFT) + stats.at<int>(i, cv::CC_STAT_WIDTH) / 2;
@@ -79,6 +83,10 @@ void CVController::findPages(cv::Mat screen) {
 	LOG_INFO("[Calibration]: Found %d pages\n", pages.size());
 }
 
+/*
+Find perk on screen using perkPath as template and place the position in foundPerk
+@returns bool: If matching was successful
+*/
 bool CVController::findPerk(cv::Mat screen, std::string perkPath, cv::Point& foundPerk) {
 	int offsets[] = { -3,-2,-1,0,1,2,3 };
 
@@ -102,6 +110,7 @@ bool CVController::findPerk(cv::Mat screen, std::string perkPath, cv::Point& fou
 	LOG_DEBUG("[CV Find Perk]: %s [ ", PerkEquipper::nameFromPathstr(perkPath).c_str());
 	for (int i = 0; i < 7; i++)
 	{
+		// Resize template to different positions
 		cv::Size newsize(perkWidth + offsets[i], perkWidth + offsets[i]);
 		cv::resize(thresholded, resized, newsize);
 		cv::resize(mask, resizedMask, newsize);
@@ -147,6 +156,7 @@ bool CVController::findPerk(cv::Mat screen, std::string perkPath, cv::Point& fou
 	return false;
 }
 
+// Helper function to display intermediate images (during testing and tinkering)
 void CVController::showMatch(std::string title, cv::Mat screen, cv::Point loc, double val) {
 	cv::Rect rect(loc.x, loc.y, perkWidth, perkWidth);
 	cv::Mat screen2 = screen.clone();
@@ -156,6 +166,11 @@ void CVController::showMatch(std::string title, cv::Mat screen, cv::Point loc, d
 	screen2.release();
 }
 
+
+/*
+Create screenshot and apply common transformations
+@returns created screenshot
+*/
 cv::Mat CVController::processedScreenshot() {
 	cv::Mat gray, cropped;
 	cv::Mat screen = captureScreenshot();

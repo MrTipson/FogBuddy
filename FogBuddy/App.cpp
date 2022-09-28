@@ -17,38 +17,46 @@ void CreateRenderTarget();
 void CleanupRenderTarget();
 LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
-static BOOL CALLBACK enumWindowCallback(HWND hWnd, LPARAM lparam) {
-    int length = GetWindowTextLength(hWnd);
-    WCHAR* buffer = new WCHAR[length + 1];
-    WCHAR* buffer2 = new WCHAR[100];
-    GetWindowText(hWnd, (LPWSTR) buffer, length + 1);
-    GetClassName(hWnd, (LPWSTR)buffer2, 100);
-
-    // List visible windows with a non-empty title
-    std::wcout << hWnd << ":  '" << buffer << "' '" << buffer2 << "'" << std::endl;
-    return TRUE;
-}
+// Show the main window
 bool showSearch = false;
+// Focus filter input first time window opens
 bool focusFlag = false;
+// Pointer that ImGui radio buttons will change
 int* logLevel = (int*) Logger::getLogLevel();
 
 // Main code
 int main(int argc, char** argv)
 {
+    // Default log level is INFO
+    *logLevel = Logger::INFO;
     std::cout << "\n\tFogBuddy console(don't close).\n\n";
     PerkEquipper perkEquipper;
-    //std::cout << "Enmumerating windows..." << std::endl;
-    //EnumWindows(enumWindowCallback, NULL);
     // Create application window
     //ImGui_ImplWin32_EnableDpiAwareness();
+
+    // Create window class
     WNDCLASSEX wc = { sizeof(WNDCLASSEX), CS_CLASSDC, WndProc, 0L, 0L, GetModuleHandle(NULL), NULL, NULL, CreateSolidBrush(RGB(0,0,0)), NULL, _T("ImGui Example"), NULL};
     RegisterClassEx(&wc);
+    // Initial window size. Later on it always adjusts to DBD's size.
     int width = GetSystemMetrics(SM_CXSCREEN);
     int height = GetSystemMetrics(SM_CYSCREEN);
+    // Create window
     HWND hwnd = CreateWindowEx(WS_EX_TOPMOST | WS_EX_LAYERED, wc.lpszClassName, _T("FogBuddy overlay"), WS_POPUP, 0, 0, width, height, NULL, NULL, wc.hInstance, NULL);
-    SetLayeredWindowAttributes(hwnd, RGB(0,0,0), 0, LWA_COLORKEY);
+    SetLayeredWindowAttributes(hwnd, RGB(0,0,0), 0, LWA_COLORKEY); // Makes it so window bg is transparent
+
+    // Grab DBD handle
     HWND hwndDBD = FindWindow(_T("UnrealWindow"), _T("DeadByDaylight  "));
-    // std::cout << hwnd << std::endl;
+    if (hwndDBD == nullptr)
+    {
+        LOG_INFO("Waiting for Dead by Daylight window.\n");
+        while (hwndDBD == nullptr)
+        {
+            Sleep(2000);
+            hwndDBD = FindWindow(_T("UnrealWindow"), _T("DeadByDaylight  "));
+        }
+        LOG_INFO("Window found. Starting.\n");
+    }
+
     // Initialize Direct3D
     if (!CreateDeviceD3D(hwnd))
     {
@@ -61,6 +69,7 @@ int main(int argc, char** argv)
     ShowWindow(hwnd, SW_SHOWMAXIMIZED);
     UpdateWindow(hwnd);
 
+    // Create hotkey to bring up the overlay (global)
     RegisterHotKey(hwnd, ID_OPEN_POPUP, MOD_ALT, 0x53); // alt-S
 
     // Setup Dear ImGui context
@@ -72,13 +81,11 @@ int main(int argc, char** argv)
 
     // Setup Dear ImGui style
     ImGui::StyleColorsDark();
-    //ImGui::StyleColorsLight();
 
     // Setup Platform/Renderer backends
     ImGui_ImplWin32_Init(hwnd);
     ImGui_ImplDX11_Init(g_pd3dDevice, g_pd3dDeviceContext);
 
-    ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 0.0f);
     // Main loop
     bool done = false;
     while (!done)
@@ -86,7 +93,7 @@ int main(int argc, char** argv)
         // Poll and handle messages (inputs, window resize, etc.)
         // See the WndProc() function below for our to dispatch events to the Win32 backend.
         MSG msg;
-        while (::PeekMessage(&msg, NULL, 0U, 0U, PM_REMOVE))
+        while (PeekMessage(&msg, NULL, 0U, 0U, PM_REMOVE))
         {
             TranslateMessage(&msg);
             DispatchMessage(&msg);
@@ -96,9 +103,12 @@ int main(int argc, char** argv)
         if (done)
             break;
 
+        // Only show overlay if DBD is the foreground window
         HWND fg = GetForegroundWindow();
         bool isDBDForeground = fg == hwndDBD || fg == hwnd;
 
+        // Adjust overlay to DBD window
+        // For proper windowed mode support, window screenshots and CVController offsets must be implemented as well
         RECT rect;
         GetWindowRect(hwndDBD, &rect);
         width = rect.right - rect.left;
@@ -112,108 +122,105 @@ int main(int argc, char** argv)
 
         ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize;
         ImGui::SetNextWindowBgAlpha(0.35f); // Transparent background
+
         ImVec2 size = { 500, 400 };
         ImGui::SetNextWindowSize(size);
+        
         if (isDBDForeground && showSearch && ImGui::Begin("FogBuddy perk search", &showSearch, window_flags))
         {
+            // Recalibrate creates a new CVController (recalculate pages and perk size)
             if (ImGui::Button("Recalibrate"))
             {
                 perkEquipper.recalibrate();
             }
             ImGui::SameLine();
+
+            // Selectors for log level
             ImGui::RadioButton("None", logLevel, Logger::NONE); ImGui::SameLine();
             ImGui::RadioButton("Info", logLevel, Logger::INFO); ImGui::SameLine();
             ImGui::RadioButton("Debug", logLevel, Logger::DEBUG);
+
+            // Input box and filtering for perks list
             static ImGuiTextFilter filter;
             filter.Draw();
+            
+            // Focus input if window just opened
             if (focusFlag) {
                 LOG_DEBUG("Focusing\n");
                 SetForegroundWindow(hwnd);
                 ImGui::SetKeyboardFocusHere(-1);
                 focusFlag = false;
             }
+
+            // Choose between sides
             static int sideToggle = 0;
             ImGui::RadioButton("Killer", &sideToggle, 0); ImGui::SameLine();
             ImGui::RadioButton("Survivor", &sideToggle, 1); ImGui::SameLine();
+            
+            // Optionally filter perks/characters out
             static bool includeCharacters = true;
             ImGui::Checkbox("Show characters", &includeCharacters); ImGui::SameLine();
             static bool includePerks = true;
             ImGui::Checkbox("Show perks", &includePerks);
-            if (sideToggle == 0) // Killer perks
+            
+            // Add in perks from either side
+            std::vector<std::string> perksList;
+            std::map<std::string, std::vector<std::string>> characters;
+            std::string basePath;
+            switch(sideToggle)
             {
-                if (includePerks)
-                {
-                    for (auto& it = perkEquipper.killerPerks.begin(); it != perkEquipper.killerPerks.end(); it++)
-                    {
-                        std::string s = PerkEquipper::nameFromPathstr(*it);
-                        const char* cstr = s.c_str();
-                        if (filter.PassFilter(cstr)) {
-                            if (ImGui::MenuItem(cstr)) {
-                                perkEquipper.equipPerk(*it, true);
-                            }
-                        }
-                    }
-
-                }
-                if (includeCharacters)
-                {
-                    for (auto& it = perkEquipper.killers.begin(); it != perkEquipper.killers.end(); it++)
-                    {
-                        std::string killer = it->first;
-                        std::vector<std::string> perks = it->second;
-                        const char* cstr = killer.c_str();
-                        if (filter.PassFilter(cstr))
-                        {
-                            if (ImGui::BeginMenu(cstr)) {
-                                for (auto& it = perks.begin(); it != perks.end(); it++)
-                                {
-                                    std::string s = (*it).substr(0, (*it).find_first_of('.'));
-                                    const char* cstr = s.c_str();
-                                    if (ImGui::MenuItem(cstr)) {
-                                        perkEquipper.equipPerk("data\\Killers\\" + killer + "\\" + *it, true);
-                                    }
-                                }
-                                ImGui::EndMenu();
-                            }
-                        }
-                    }
-                }
+            case 0: // Killer
+                perksList = perkEquipper.killerPerks;
+                characters = perkEquipper.killers;
+                basePath = "data\\Killers\\";
+                break;
+            case 1: // Survivor
+                perksList = perkEquipper.survivorPerks;
+                characters = perkEquipper.survivors;
+                basePath = "data\\Survivors\\";
+                break;
+            default:
+                LOG_DEBUG("Side toggle sanity check failed.\n");
+                continue;
             }
-            else if (sideToggle == 1) // Survivor perks
+            if (includePerks)
             {
-                if (includePerks)
+                for (auto& it = perksList.begin(); it != perksList.end(); it++)
                 {
-                    for (auto& it = perkEquipper.survivorPerks.begin(); it != perkEquipper.survivorPerks.end(); it++)
-                    {
-                        std::string s = PerkEquipper::nameFromPathstr(*it);
-                        const char* cstr = s.c_str();
-                        if (filter.PassFilter(cstr)) {
-                            if (ImGui::MenuItem(cstr)) {
-                                perkEquipper.equipPerk(*it, false);
-                            }
+                    std::string s = PerkEquipper::nameFromPathstr(*it);
+                    const char* cstr = s.c_str();
+                    if (filter.PassFilter(cstr)) {
+                        // Each perk is a menu item
+                        if (ImGui::MenuItem(cstr)) {
+                            perkEquipper.equipPerk(*it, true);
                         }
                     }
                 }
-                if (includeCharacters)
+
+            }
+            if (includeCharacters)
+            {
+                // Loop through all mappings
+                // character name -> vector<character perk names>
+                for (auto& it = characters.begin(); it != characters.end(); it++)
                 {
-                    for (auto& it = perkEquipper.survivors.begin(); it != perkEquipper.survivors.end(); it++)
+                    std::string character = it->first;
+                    std::vector<std::string> perks = it->second;
+                    const char* cstr = character.c_str();
+                    if (filter.PassFilter(cstr))
                     {
-                        std::string survivor = it->first;
-                        std::vector<std::string> perks = it->second;
-                        const char* cstr = survivor.c_str();
-                        if (filter.PassFilter(cstr))
-                        {
-                            if (ImGui::BeginMenu(cstr)) {
-                                for (auto& it = perks.begin(); it != perks.end(); it++)
-                                {
-                                    std::string s = (*it).substr(0, (*it).find_first_of('.'));
-                                    const char* cstr = s.c_str();
-                                    if (ImGui::MenuItem(cstr)) {
-                                        perkEquipper.equipPerk("data\\Survivors\\" + survivor + "\\" + *it, false);
-                                    }
+                        // Each killer is a menu
+                        if (ImGui::BeginMenu(cstr)) {
+                            for (auto& it = perks.begin(); it != perks.end(); it++)
+                            {
+                                std::string s = (*it).substr(0, (*it).find_first_of('.'));
+                                const char* cstr = s.c_str();
+                                // that contains their teachables
+                                if (ImGui::MenuItem(cstr)) {
+                                    perkEquipper.equipPerk(basePath + character + "\\" + *it, true);
                                 }
-                                ImGui::EndMenu();
                             }
+                            ImGui::EndMenu();
                         }
                     }
                 }
@@ -236,9 +243,9 @@ int main(int argc, char** argv)
     ImGui_ImplWin32_Shutdown();
     ImGui::DestroyContext();
 
-   CleanupDeviceD3D();
-    ::DestroyWindow(hwnd);
-    ::UnregisterClass(wc.lpszClassName, wc.hInstance);
+    CleanupDeviceD3D();
+    DestroyWindow(hwnd);
+    UnregisterClass(wc.lpszClassName, wc.hInstance);
 
     return 0;
 }
@@ -336,5 +343,5 @@ LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         ::PostQuitMessage(0);
         return 0;
     }
-    return ::DefWindowProc(hWnd, msg, wParam, lParam);
+    return DefWindowProc(hWnd, msg, wParam, lParam);
 }

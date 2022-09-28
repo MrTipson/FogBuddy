@@ -81,9 +81,16 @@ void mouseMove(int x, int y) {
 
 void moveAndClickDBD(int x, int y) {
     LOG_DEBUG("[MoveN'Click]: x: %d, y: %d\n", x, y);
+    // Restore cursor position after selecting
     POINT p;
     GetCursorPos(&p);
     HWND dbd = FindWindow(L"UnrealWindow", L"DeadByDaylight  ");
+    if (dbd == nullptr)
+    {
+        LOG_DEBUG("[MoveN'Click]: DBD window sanity check failed\n");
+        return;
+    }
+    // Save foreground window so it can be restored as well
     HWND old = GetForegroundWindow();
     SetForegroundWindow(dbd);
     mouseMove(x, y);
