@@ -93,6 +93,9 @@ int main(int argc, char** argv)
         if (done)
             break;
 
+        HWND fg = GetForegroundWindow();
+        bool isDBDForeground = fg == hwndDBD || fg == hwnd;
+
         RECT rect;
         GetWindowRect(hwndDBD, &rect);
         width = rect.right - rect.left;
@@ -104,11 +107,11 @@ int main(int argc, char** argv)
         ImGui_ImplWin32_NewFrame();
         ImGui::NewFrame();
 
-        ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoCollapse;
+        ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize;
         ImGui::SetNextWindowBgAlpha(0.35f); // Transparent background
         ImVec2 size = { 500, 400 };
         ImGui::SetNextWindowSize(size);
-        if (showSearch && ImGui::Begin("FogBuddy perk search", &showSearch, window_flags))
+        if (isDBDForeground && showSearch && ImGui::Begin("FogBuddy perk search", &showSearch, window_flags))
         {
             static ImGuiTextFilter filter;
             filter.Draw();
