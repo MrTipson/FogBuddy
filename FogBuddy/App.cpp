@@ -3,9 +3,6 @@
 #include "CVController.h"
 #include "PerkEquipper.h"
 
-// ImGui macro for adding keyboard maps
-#define MAP_KEY(NAV_NO, KEY_NO) { if (io.KeysDown[KEY_NO]) io.NavInputs[NAV_NO] = 1.0f; }
-
 // Data
 static ID3D11Device* g_pd3dDevice = NULL;
 static ID3D11DeviceContext* g_pd3dDeviceContext = NULL;
@@ -138,7 +135,7 @@ int main(int argc, char** argv)
                         const char* cstr = s.c_str();
                         if (filter.PassFilter(cstr)) {
                             if (ImGui::MenuItem(cstr)) {
-                                perkEquipper.equipPerk(*it);
+                                perkEquipper.equipPerk(*it, true);
                             }
                         }
                     }
@@ -159,7 +156,7 @@ int main(int argc, char** argv)
                                     std::string s = (*it).substr(0, (*it).find_first_of('.'));
                                     const char* cstr = s.c_str();
                                     if (ImGui::MenuItem(cstr)) {
-                                        perkEquipper.equipPerk("data/Killers/" + killer + "/" + *it);
+                                        perkEquipper.equipPerk("data/Killers/" + killer + "/" + *it, true);
                                     }
                                 }
                                 ImGui::EndMenu();
@@ -178,7 +175,7 @@ int main(int argc, char** argv)
                         const char* cstr = s.c_str();
                         if (filter.PassFilter(cstr)) {
                             if (ImGui::MenuItem(cstr)) {
-                                perkEquipper.equipPerk(*it);
+                                perkEquipper.equipPerk(*it, false);
                             }
                         }
                     }
@@ -198,7 +195,7 @@ int main(int argc, char** argv)
                                     std::string s = (*it).substr(0, (*it).find_first_of('.'));
                                     const char* cstr = s.c_str();
                                     if (ImGui::MenuItem(cstr)) {
-                                        perkEquipper.equipPerk("data/Survivors/" + survivor + "/" + *it);
+                                        perkEquipper.equipPerk("data/Survivors/" + survivor + "/" + *it, false);
                                     }
                                 }
                                 ImGui::EndMenu();

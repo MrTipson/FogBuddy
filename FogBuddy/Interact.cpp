@@ -79,11 +79,15 @@ void mouseMove(int x, int y) {
 }
 
 void moveAndClickDBD(int x, int y) {
+    POINT p;
+    GetCursorPos(&p);
     HWND dbd = FindWindow(L"UnrealWindow", L"DeadByDaylight  ");
     HWND old = GetForegroundWindow();
     SetForegroundWindow(dbd);
     mouseMove(x, y);
+    Sleep(50);
     mouseClick();
-    Sleep(100);
-    std::cout << SetForegroundWindow(old) << std::endl;
+    Sleep(50);
+    mouseMove(p.x, p.y);
+    SetForegroundWindow(old);
 }

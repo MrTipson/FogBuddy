@@ -7,6 +7,7 @@ class PerkEquipper
 {
 private:
 	CVController* controller;
+	bool equipPerkAdjust(int currentPage, int perkIndex, bool isKillerPerk);
 public:
 	std::map<std::string, std::vector<std::string>> killers;
 	std::vector<std::string> killerPerks;
@@ -16,6 +17,6 @@ public:
 	PerkEquipper();
 	~PerkEquipper();
 	
-	bool equipPerk(std::string perk);
+	bool equipPerk(std::string perk, bool isKillerPerk);
 };
 

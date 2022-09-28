@@ -4,6 +4,9 @@
 #include <vector>
 #include <math.h>
 
+int CVController::width = -1;
+int CVController::height = -1;
+
 CVController::CVController() {
 	cv::Mat croppedImage = processedScreenshot();
 	calibrate(croppedImage);
@@ -61,6 +64,7 @@ void CVController::findPages(cv::Mat screen) {
 	}
 	std::sort(topVals.begin(), topVals.end());
 	int median = topVals.at((int)(topVals.size() / 2)); // This is not a 'real' median
+	int heightOffset = (int)(CVController::height / 2);
 	for (int i = 0; i < numLabels; i++)
 	{
 		int top = stats.at<int>(i, cv::CC_STAT_TOP);
@@ -68,7 +72,7 @@ void CVController::findPages(cv::Mat screen) {
 		{
 			int x = stats.at<int>(i, cv::CC_STAT_LEFT) + stats.at<int>(i, cv::CC_STAT_WIDTH) / 2;
 			int y = stats.at<int>(i, cv::CC_STAT_TOP) + stats.at<int>(i, cv::CC_STAT_HEIGHT) / 2;
-			pages.push_back({ x, y });
+			pages.push_back({ x, y + heightOffset });
 		}
 	}
 	printf("[Calibration]: Found %d pages\n", pages.size());
@@ -121,7 +125,6 @@ bool CVController::findPerk(cv::Mat screen, std::string perkPath, cv::Point& fou
 
 	// showMatch("Best match " + std::to_string(opt_val), screen, opt_loc, opt_val);
 
-	std::cout << opt_val << std::endl;
 	if (opt_val < 0.5)
 	{
 		std::cout << "Found perk match (with error " << opt_val << ")\n";
@@ -130,6 +133,7 @@ bool CVController::findPerk(cv::Mat screen, std::string perkPath, cv::Point& fou
 		foundPerk = opt_loc;
 		return true;
 	}
+	std::cout << "No match (best error " << opt_val << ")\n";
 	return false;
 }
 
@@ -142,18 +146,16 @@ void CVController::showMatch(std::string title, cv::Mat screen, cv::Point loc, d
 	screen2.release();
 }
 
-cv::Mat CVController::processedScreenshot(int* origWidth, int* origHeight) {
+cv::Mat CVController::processedScreenshot() {
 	cv::Mat gray, cropped;
 	cv::Mat screen = captureScreenshot();
-	int width = screen.cols;
-	int height = screen.rows;
-	if (origWidth != nullptr) *origWidth = width;
-	if (origHeight != nullptr) *origHeight = height;
+	CVController::width = screen.cols;
+	CVController::height = screen.rows;
 
 	cv::cvtColor(screen, gray, cv::COLOR_BGR2GRAY);
 	screen.release();
 
-	int startX = 0, startY = (int)(height / 2), rectW = (int)(0.55 * width), rectH = (int)(height / 2);
+	int startX = 0, startY = (int)(CVController::height / 2), rectW = (int)(0.55 * CVController::width), rectH = (int)(CVController::height / 2);
 	cv::Rect window(startX, startY, rectW, rectH);
 
 	cv::Mat ROI(gray, window);

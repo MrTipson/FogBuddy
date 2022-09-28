@@ -6,12 +6,13 @@ class CVController
 {
 private:
 	int perkWidth;
-	std::vector<cv::Point> pages;
 	void calibrate(cv::Mat screen);
 	void findPages(cv::Mat screen);
 	void showMatch(std::string title,  cv::Mat screen, cv::Point, double val);
 public:
+	std::vector<cv::Point> pages;
 	CVController();
 	bool findPerk(cv::Mat screen, std::string perkPath, cv::Point& perk);
-	static cv::Mat processedScreenshot(int* origWidth = nullptr, int* origHeight = nullptr);
+	static cv::Mat processedScreenshot();
+	static int width, height;
 };
