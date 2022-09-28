@@ -37,39 +37,70 @@ bool PerkEquipper::equipPerk(std::string perk, bool isKillerPerk) {
 		std::cout << "Sending click	[ x: " << foundPerk.x << ", y: " << foundPerk.y << " ]\n";
 		moveAndClickDBD(foundPerk.x, foundPerk.y);
 		screen.release();
-		return false;
+		return true;
 	}
 	else
 	{
 		std::cout << "Perk wasn't found on expected page, attempting to recover\n";
 		screen.release();
-		return true;
+		equipPerkAdjust(expectedPage, perkIndex, isKillerPerk);
+		return false;
 	}
 }
 
 bool PerkEquipper::equipPerkAdjust(int currentPage, int perkIndex, bool isKillerPerk) {
-	if (controller == nullptr)
-	{
-		std::cout << "Initializing CVController\n";
-		controller = new CVController();
-	}
+	bool foundBefore = false, foundAfter = false;
+
 	std::vector<std::string> perks = isKillerPerk ? killerPerks : survivorPerks;
-	cv::Mat screen = CVController::processedScreenshot();
 	cv::Point foundPerk;
+
+	cv::Mat screen = CVController::processedScreenshot();
+	for (int i = perkIndex - 1; i >= 0 && i >= perkIndex - 5; i--)
+	{
+		if (controller->findPerk(screen, perks[i], foundPerk))
+		{
+			foundBefore = true;
+			break;
+		}
+	}
+	for (int i = perkIndex + 1; perkIndex < perks.size() && i <= perkIndex + 5; i++)
+	{
+		if (controller->findPerk(screen, perks[i], foundPerk))
+		{
+			foundAfter = true;
+			break;
+		}
+	}
+	if (foundBefore == foundAfter)
+	{
+		std::cout << "Perk not found [ " << foundBefore << " " << foundAfter << " ].\n";
+		return false;
+	}
+	if (foundBefore)
+	{
+		std::cout << "Moving to next page.\n";
+		currentPage++;
+	}
+	if (foundAfter)
+	{
+		std::cout << "Moving to previous page.\n";
+		currentPage--;
+	}
+	cv::Point button = controller->pages[currentPage];
+	moveAndClickDBD(button.x, button.y);
+	Sleep(500);
+	screen = CVController::processedScreenshot();
 	if (controller->findPerk(screen, perks[perkIndex], foundPerk))
 	{
 		foundPerk.y += (int)(CVController::height / 2);
 		std::cout << "Sending click	[ x: " << foundPerk.x << ", y: " << foundPerk.y << " ]\n";
 		moveAndClickDBD(foundPerk.x, foundPerk.y);
 		screen.release();
-		return false;
-	}
-	else
-	{
-		std::cout << "O no, couldnt find perk\n";
-		screen.release();
 		return true;
 	}
+	std::cout << "Could not recover.\n";
+	screen.release();
+	return false;
 }
 
 PerkEquipper::PerkEquipper() {

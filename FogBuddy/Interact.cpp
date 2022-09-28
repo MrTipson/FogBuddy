@@ -85,9 +85,9 @@ void moveAndClickDBD(int x, int y) {
     HWND old = GetForegroundWindow();
     SetForegroundWindow(dbd);
     mouseMove(x, y);
-    Sleep(50);
+    Sleep(75);
     mouseClick();
-    Sleep(50);
+    Sleep(75);
     mouseMove(p.x, p.y);
     SetForegroundWindow(old);
 }

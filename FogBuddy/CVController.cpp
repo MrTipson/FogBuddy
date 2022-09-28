@@ -98,6 +98,7 @@ bool CVController::findPerk(cv::Mat screen, std::string perkPath, cv::Point& fou
 	
 	double opt_val = 1;
 	cv::Point opt_loc;
+	std::cout << "[ ";
 	for (int i = 0; i < 7; i++) {
 		cv::Size newsize(perkWidth+offsets[i], perkWidth + offsets[i]);
 		cv::resize(thresholded, resized, newsize);
@@ -115,8 +116,15 @@ bool CVController::findPerk(cv::Mat screen, std::string perkPath, cv::Point& fou
 			opt_val = min_val;
 			opt_loc = min_loc;
 		}
+		if (opt_val < 0.4)
+		{
+			std::cout << "ending early ";
+			break;
+		}
+		std::cout << min_val << ", ";
 		// showMatch("Match " + std::to_string(min_val) + " " + std::to_string(offsets[i]), screen, min_loc, min_val);
 	}
+	std::cout << " ] ";
 	screenThresh.release();
 	resized.release();
 	resizedMask.release();
