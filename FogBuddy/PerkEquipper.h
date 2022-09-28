@@ -18,5 +18,8 @@ public:
 	~PerkEquipper();
 	
 	bool equipPerk(std::string perk, bool isKillerPerk);
+	void recalibrate();
+
+	static std::string nameFromPathstr(std::string path);
 };
 

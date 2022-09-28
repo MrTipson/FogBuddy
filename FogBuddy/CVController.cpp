@@ -1,8 +1,9 @@
 #include "CVController.h"
 #include "Interact.h"
-#include <stdio.h>
 #include <vector>
 #include <math.h>
+#include "Logger.h"
+#include "PerkEquipper.h"
 
 int CVController::width = -1;
 int CVController::height = -1;
@@ -18,7 +19,7 @@ void CVController::calibrate(cv::Mat screen) {
 	cv::Mat thresholded, morbed;
 	cv::threshold(screen, thresholded, 15, 255, cv::THRESH_BINARY_INV);
 
-	cv::Size seSize(20,20);
+	cv::Size seSize(20, 20);
 	cv::morphologyEx(thresholded, morbed, cv::MORPH_CLOSE, cv::getStructuringElement(cv::MORPH_ELLIPSE, seSize));
 	thresholded.release();
 
@@ -37,7 +38,7 @@ void CVController::calibrate(cv::Mat screen) {
 	}
 	std::sort(widths.begin(), widths.end());
 	perkWidth = widths.at((int)(widths.size() / 2));
-	printf("[Calibration]: Perk width calculated @ %d\n", perkWidth);
+	LOG_INFO("[Calibration]: Perk width calculated @ %d\n", perkWidth);
 }
 
 void CVController::findPages(cv::Mat screen) {
@@ -75,7 +76,7 @@ void CVController::findPages(cv::Mat screen) {
 			pages.push_back({ x, y + heightOffset });
 		}
 	}
-	printf("[Calibration]: Found %d pages\n", pages.size());
+	LOG_INFO("[Calibration]: Found %d pages\n", pages.size());
 }
 
 bool CVController::findPerk(cv::Mat screen, std::string perkPath, cv::Point& foundPerk) {
@@ -95,12 +96,13 @@ bool CVController::findPerk(cv::Mat screen, std::string perkPath, cv::Point& fou
 
 	cv::threshold(template_, thresholded, 100, 255, cv::THRESH_TOZERO);
 	template_.release();
-	
+
 	double opt_val = 1;
 	cv::Point opt_loc;
-	std::cout << "[ ";
-	for (int i = 0; i < 7; i++) {
-		cv::Size newsize(perkWidth+offsets[i], perkWidth + offsets[i]);
+	LOG_DEBUG("[CV Find Perk]: %s [ ", PerkEquipper::nameFromPathstr(perkPath).c_str());
+	for (int i = 0; i < 7; i++)
+	{
+		cv::Size newsize(perkWidth + offsets[i], perkWidth + offsets[i]);
 		cv::resize(thresholded, resized, newsize);
 		cv::resize(mask, resizedMask, newsize);
 
@@ -118,13 +120,13 @@ bool CVController::findPerk(cv::Mat screen, std::string perkPath, cv::Point& fou
 		}
 		if (opt_val < 0.4)
 		{
-			std::cout << "ending early ";
+			LOG_DEBUG("ending early ");
 			break;
 		}
-		std::cout << min_val << ", ";
+		LOG_DEBUG("%.3f, ", min_val);
 		// showMatch("Match " + std::to_string(min_val) + " " + std::to_string(offsets[i]), screen, min_loc, min_val);
 	}
-	std::cout << " ] ";
+	LOG_DEBUG(" ] ");
 	screenThresh.release();
 	resized.release();
 	resizedMask.release();
@@ -135,13 +137,13 @@ bool CVController::findPerk(cv::Mat screen, std::string perkPath, cv::Point& fou
 
 	if (opt_val < 0.5)
 	{
-		std::cout << "Found perk match (with error " << opt_val << ")\n";
+		LOG_DEBUG("Found perk match (with error %.3f)\n", opt_val);
 		opt_loc.x += (int)(perkWidth / 2);
 		opt_loc.y += (int)(perkWidth / 2);
 		foundPerk = opt_loc;
 		return true;
 	}
-	std::cout << "No match (best error " << opt_val << ")\n";
+	LOG_DEBUG("No match (best error %.3f)\n", opt_val);
 	return false;
 }
 

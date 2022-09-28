@@ -2,6 +2,7 @@
 #include <iostream>
 #include "CVController.h"
 #include "PerkEquipper.h"
+#include "Logger.h"
 
 // Data
 static ID3D11Device* g_pd3dDevice = NULL;
@@ -29,10 +30,12 @@ static BOOL CALLBACK enumWindowCallback(HWND hWnd, LPARAM lparam) {
 }
 bool showSearch = false;
 bool focusFlag = false;
+int* logLevel = (int*) Logger::getLogLevel();
+
 // Main code
 int main(int argc, char** argv)
 {
-    std::cout << "FogBuddy console (don't close).";
+    std::cout << "\n\tFogBuddy console(don't close).\n\n";
     PerkEquipper perkEquipper;
     //std::cout << "Enmumerating windows..." << std::endl;
     //EnumWindows(enumWindowCallback, NULL);
@@ -113,10 +116,18 @@ int main(int argc, char** argv)
         ImGui::SetNextWindowSize(size);
         if (isDBDForeground && showSearch && ImGui::Begin("FogBuddy perk search", &showSearch, window_flags))
         {
+            if (ImGui::Button("Recalibrate"))
+            {
+                perkEquipper.recalibrate();
+            }
+            ImGui::SameLine();
+            ImGui::RadioButton("None", logLevel, Logger::NONE); ImGui::SameLine();
+            ImGui::RadioButton("Info", logLevel, Logger::INFO); ImGui::SameLine();
+            ImGui::RadioButton("Debug", logLevel, Logger::DEBUG);
             static ImGuiTextFilter filter;
             filter.Draw();
             if (focusFlag) {
-                std::cout << "Focusing" << std::endl;
+                LOG_DEBUG("Focusing\n");
                 SetForegroundWindow(hwnd);
                 ImGui::SetKeyboardFocusHere(-1);
                 focusFlag = false;
@@ -134,7 +145,7 @@ int main(int argc, char** argv)
                 {
                     for (auto& it = perkEquipper.killerPerks.begin(); it != perkEquipper.killerPerks.end(); it++)
                     {
-                        std::string s = (*it).substr((*it).find_last_of('\\') + 1);
+                        std::string s = PerkEquipper::nameFromPathstr(*it);
                         const char* cstr = s.c_str();
                         if (filter.PassFilter(cstr)) {
                             if (ImGui::MenuItem(cstr)) {
@@ -174,7 +185,7 @@ int main(int argc, char** argv)
                 {
                     for (auto& it = perkEquipper.survivorPerks.begin(); it != perkEquipper.survivorPerks.end(); it++)
                     {
-                        std::string s = (*it).substr((*it).find_last_of('\\') + 1);
+                        std::string s = PerkEquipper::nameFromPathstr(*it);
                         const char* cstr = s.c_str();
                         if (filter.PassFilter(cstr)) {
                             if (ImGui::MenuItem(cstr)) {

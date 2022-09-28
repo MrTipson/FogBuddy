@@ -1,4 +1,5 @@
 #include "Interact.h"
+#include "Logger.h"
 #include <iostream>
 #include <Windows.h>
 
@@ -79,6 +80,7 @@ void mouseMove(int x, int y) {
 }
 
 void moveAndClickDBD(int x, int y) {
+    LOG_DEBUG("[MoveN'Click]: x: %d, y: %d\n", x, y);
     POINT p;
     GetCursorPos(&p);
     HWND dbd = FindWindow(L"UnrealWindow", L"DeadByDaylight  ");
