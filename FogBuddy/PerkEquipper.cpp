@@ -16,14 +16,15 @@ bool PerkEquipper::equipPerk(std::string perk, bool isKillerPerk) {
 	}
 	std::vector<std::string> perks = isKillerPerk ? killerPerks : survivorPerks;
 	int perkIndex = std::find(perks.begin(), perks.end(), perk) - perks.begin();
-	if (perkIndex < 0)
+	if (perkIndex < 0 || perkIndex >= perks.size())
 	{
 		std::cout << "Equip perk sanity check failed\n";
 		return false;
 	}
 	double ratio = controller->pages.size() / ceil(1.0 * perks.size() / 15);
 	int expectedPage = (int)(perkIndex * ratio / 15);
-	std::cout << "Expected page: " << expectedPage << std::endl;
+	// Print with + 1 so it matches in-game page numbers
+	std::cout << "Expected page: " << expectedPage + 1 << std::endl;
 
 	cv::Point button = controller->pages[expectedPage];
 	moveAndClickDBD(button.x, button.y);
@@ -73,7 +74,8 @@ bool PerkEquipper::equipPerkAdjust(int currentPage, int perkIndex, bool isKiller
 
 PerkEquipper::PerkEquipper() {
 	controller = nullptr;
-	for (const fs::directory_entry& entry : fs::directory_iterator("data/Killers")) {
+	// Use \\ because the iterators use them, so its uniform
+	for (const fs::directory_entry& entry : fs::directory_iterator("data\\Killers")) {
 		std::vector<std::string> perks;
 		for (const fs::directory_entry& perk : fs::directory_iterator(entry.path())) {
 			std::string s = perk.path().filename().string();
@@ -83,7 +85,7 @@ PerkEquipper::PerkEquipper() {
 		std::string killer = entry.path().filename().string();
 		killers.emplace(killer, perks);
 	}
-	for (const fs::directory_entry& entry : fs::directory_iterator("data/Survivors")) {
+	for (const fs::directory_entry& entry : fs::directory_iterator("data\\Survivors")) {
 		std::vector<std::string> perks;
 		for (const fs::directory_entry& perk : fs::directory_iterator(entry.path())) {
 			std::string s = perk.path().filename().string();

@@ -156,7 +156,7 @@ int main(int argc, char** argv)
                                     std::string s = (*it).substr(0, (*it).find_first_of('.'));
                                     const char* cstr = s.c_str();
                                     if (ImGui::MenuItem(cstr)) {
-                                        perkEquipper.equipPerk("data/Killers/" + killer + "/" + *it, true);
+                                        perkEquipper.equipPerk("data\\Killers\\" + killer + "\\" + *it, true);
                                     }
                                 }
                                 ImGui::EndMenu();
@@ -195,7 +195,7 @@ int main(int argc, char** argv)
                                     std::string s = (*it).substr(0, (*it).find_first_of('.'));
                                     const char* cstr = s.c_str();
                                     if (ImGui::MenuItem(cstr)) {
-                                        perkEquipper.equipPerk("data/Survivors/" + survivor + "/" + *it, false);
+                                        perkEquipper.equipPerk("data\\Survivors\\" + survivor + "\\" + *it, false);
                                     }
                                 }
                                 ImGui::EndMenu();
