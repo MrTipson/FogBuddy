@@ -50,7 +50,7 @@ void CVController::findPages(cv::Mat screen) {
 	cv::threshold(screen, thresholded, 130, 255, cv::THRESH_BINARY);
 
 	cv::Size seSize(20, 20);
-	cv::morphologyEx(thresholded, morbed, cv::MORPH_CROSS, cv::getStructuringElement(cv::MORPH_ELLIPSE, seSize));
+	cv::morphologyEx(thresholded, morbed, cv::MORPH_DILATE, cv::getStructuringElement(cv::MORPH_ELLIPSE, seSize));
 	thresholded.release();
 
 	cv::Mat labels, stats, centroids;
@@ -100,10 +100,10 @@ bool CVController::findPerk(cv::Mat screen, std::string perkPath, cv::Point& fou
 	template_ = template_.mul(channels[3]);
 	perk.release();
 
-	cv::Mat mask = cv::imread("data/mask.png", cv::IMREAD_GRAYSCALE);
-
 	cv::threshold(template_, thresholded, 100, 255, cv::THRESH_TOZERO);
 	template_.release();
+
+	cv::Mat mask = cv::imread("data/mask.png", cv::IMREAD_GRAYSCALE);
 
 	double opt_val = 1;
 	cv::Point opt_loc;
