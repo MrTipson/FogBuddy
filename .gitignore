@@ -5,3 +5,6 @@ bin-int/
 *.vcxproj.filters
 *.vcxproj.user
 .vs/
+data/Killers
+data/Survivors
+extra/*

@@ -1,0 +1,5 @@
+ipykernel
+jupyter-client
+matplotlib
+numpy
+opencv-python

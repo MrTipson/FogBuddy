@@ -1,0 +1,7 @@
+{
+  "dependencies": {
+    "fs": "^0.0.1-security",
+    "jsdom": "^20.0.0",
+    "request": "^2.88.2"
+  }
+}
