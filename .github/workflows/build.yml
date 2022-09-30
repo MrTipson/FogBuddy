@@ -1,0 +1,60 @@
+name: Build
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+jobs:
+  create_release:
+    name: Create GitHub Release
+    runs-on: windows-2019
+    steps:
+      - name: Install 7Zip PowerShell Module
+        shell: powershell
+        run: Install-Module 7Zip4PowerShell -Force -Verbose
+      - uses: actions/checkout@v2
+        with:
+          submodules: 'recursive'
+      - uses: actions/setup-node@v3
+      - name: Download perk images
+        run: cd extra && npm i && node getPerks.js
+      - uses: abel0b/setup-premake@v2.1
+        with:
+          version: "5.0.0-beta2"
+      - name: Download opencv
+        shell: powershell
+        run: Invoke-WebRequest -Uri https://github.com/opencv/opencv/releases/download/4.6.0/opencv-4.6.0-vc14_vc15.exe -OutFile opencv.exe
+      - name: Extract opencv
+        shell: cmd
+        run: start /b /wait opencv.exe -o"." -y
+      - name: Setup build
+        shell: cmd
+        run: premake5 --opencv="opencv" vs2019
+      - name: Build Binary
+        shell: cmd
+        run: "\"%programfiles(x86)%\\Microsoft Visual Studio\\2019\\Enterprise\\MSBuild\\Current\\Bin\\msbuild.exe\""
+      - name: Build Artifact
+        shell: powershell
+        run: Compress-7Zip "Release" -ArchiveFileName "FogBuddy.zip" -Format Zip
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@latest
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          body: |
+            Automated Release by GitHub Action CI
+          draft: false
+          prerelease: true
+      - name: Upload Release Asset (x86)
+        id: upload-release-asset-x86
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./FogBuddy.zip
+          asset_name: FogBuddy.zip
+          asset_content_type: application/zip
