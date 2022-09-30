@@ -67,7 +67,6 @@ const download = (url, path, callback) => {
 		acc[value.survivor].push(value);
 		return acc;
 	}, {});
-	if (!fs.existsSync("data")) fs.mkdirSync("data");
 	fs.mkdirSync("../data/Survivors");
 	for (survivor in groupedPerks) {
 		survivorName = survivor == 'undefined' ? 'CommonSurvivor' : survivor;

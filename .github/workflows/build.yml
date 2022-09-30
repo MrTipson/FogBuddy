@@ -36,7 +36,7 @@ jobs:
         run: start /b /wait opencv.exe -o"." -y
       - name: Setup build
         shell: cmd
-        run: premake5 --opencv="opencv" vs2019
+        run: premake5 --opencv="C:\\opencv" vs2019
       - name: Build Binary
         shell: cmd
         run: "\"%programfiles(x86)%\\Microsoft Visual Studio\\2019\\Enterprise\\MSBuild\\Current\\Bin\\msbuild.exe\""
