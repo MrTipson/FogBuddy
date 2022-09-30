@@ -1,9 +1,9 @@
 name: Build
 on:
+  # cant have workflow dispatch
   push:
     tags:
       - 'v*'
-  workflow_dispatch:
 jobs:
   create_release:
     name: Create GitHub Release
@@ -21,10 +21,17 @@ jobs:
       - uses: abel0b/setup-premake@v2.1
         with:
           version: "5.0.0-beta2"
+      - uses: actions/cache@v3
+        id: cache
+        with:
+          path: opencv
+          key: opencv460
       - name: Download opencv
+        if: steps.cache.outputs.cache-hit != 'true'
         shell: powershell
         run: Invoke-WebRequest -Uri https://github.com/opencv/opencv/releases/download/4.6.0/opencv-4.6.0-vc14_vc15.exe -OutFile opencv.exe
       - name: Extract opencv
+        if: steps.cache.outputs.cache-hit != 'true'
         shell: cmd
         run: start /b /wait opencv.exe -o"." -y
       - name: Setup build
@@ -35,7 +42,7 @@ jobs:
         run: "\"%programfiles(x86)%\\Microsoft Visual Studio\\2019\\Enterprise\\MSBuild\\Current\\Bin\\msbuild.exe\""
       - name: Build Artifact
         shell: powershell
-        run: Compress-7Zip "Release" -ArchiveFileName "FogBuddy.zip" -Format Zip
+        run: Compress-7Zip "bin\\Release\\FogBuddy" -ArchiveFileName "FogBuddy.zip" -Format Zip
       - name: Create Release
         id: create_release
         uses: actions/create-release@latest
