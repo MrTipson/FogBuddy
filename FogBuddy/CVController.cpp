@@ -77,7 +77,7 @@ void CVController::findPages(cv::Mat screen) {
 		{
 			int x = stats.at<int>(i, cv::CC_STAT_LEFT) + stats.at<int>(i, cv::CC_STAT_WIDTH) / 2;
 			int y = stats.at<int>(i, cv::CC_STAT_TOP) + stats.at<int>(i, cv::CC_STAT_HEIGHT) / 2;
-			pages.push_back({ x, y + heightOffset });
+			pages.push_back({ x + 2, y + heightOffset + 2});
 		}
 	}
 	LOG_INFO("[Calibration]: Found %d pages\n", pages.size());
