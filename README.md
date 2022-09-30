@@ -24,7 +24,26 @@ I've attempted to reach out to support to get some sort of statement from BHVR, 
 If the previous section hasn't made it clear, *im taking this seriously*. **You should too**. I've outlined the risks involved, but if you use this, you are choosing to accept them. If I had to feel responsible for everyone, I just wouldn't release this to the public. *Its as simple as that*.
 
 ## You accept the risks? Here is how to install:
-TODO
+Download the latest zip file from the [releases](https://github.com/MrTipson/FogBuddy/releases) and extract the contents anywhere.
+
+## How to use
+Start *FogBuddy.exe* and Dead by Daylight (order doesn't matter). If you restart Dead by Daylight, you must restart *FogBuddy* as well.
+
+Every time you swap characters (or change UI size), you have to click on *recalibrate*.
+> Recalibrating is not necessary if you're swapping between characters that have the same amount of pages.
+
+The program works best if you have all perks on tier 3, it can handle missing DLCs/perks.
+
+#### Controls
+You can bring up the overlay using **Alt+E**. Close the overlay by clicking the 'x' in the upper right corner.
+
+When you click on a perk, a dot will appear next to the window name. Please do not move your mouse until the dot disappears.
+
+You can also use keyboard controls. Arrow keys move between different elements, space is used to select an item and tab is useful for focusing the input field.
+> Sometimes selecting a perk using space does not work first try. While this is being looked into, pay attention to the activity dot to see when its doing something.
+
+#### Logging
+If you've got 2 monitors, having the *FogBuddy* open on the side might be useful to notice if its having issues. If you submit any [issues](https://github.com/MrTipson/FogBuddy/issues), posting relevant debug log information could also be helpful in resolving them.
 
 ## Cool! How does it work?
  - for more insight on the computer vision algorithms, I would suggest checking out the python notebooks in [extra](extra/).
@@ -33,6 +52,15 @@ They might not always be up to date, but its a lot easier to tinker with/underst
  - screenshots and user input are implemented with Windows syscalls (*Windows.h*).
  - perk images are scraped with JavaScript from the Dead by Daylight [wiki](https://deadbydaylight.fandom.com/).
  - the project uses C++17 and DX11 (the python notebooks are just for tinkering, and scraping images is more of a pre-build step).
+
+## Contributing
+You want to help? I've got a few things on the TO-DO list, such as:
+ - focus issues with keyboard controls
+ - improving template matching
+ - improving robustness for different resolutions
+ - supporting windowed mode
+
+, but if you have your own ideas, I'd be happy to hear them.
 
 ## Building
 Clone the repository.
