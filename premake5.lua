@@ -41,6 +41,7 @@ project "FogBuddy"
 	if _OPTIONS["opencv"] == nil then
 		error("You must pass opencv dir")
 	else
+		_OPTIONS["opencv"] = path.getabsolute(_OPTIONS["opencv"])
 		print(_OPTIONS["opencv"])
 	end
 
