@@ -111,7 +111,8 @@ bool PerkEquipper::equipPerkAdjust(int currentPage, int perkIndex, bool isKiller
 
 	// Prepare page switch
 	cv::Point button = controller->pages[currentPage];
-	LOG_INFO("[Equip Perks]: Selecting page %d\n", currentPage);
+	// Log with +1 so it matches DBD page numbers
+	LOG_INFO("[Equip Perks]: Selecting page %d\n", currentPage + 1);
 	moveAndClickDBD(button.x, button.y);
 	Sleep(500);
 
