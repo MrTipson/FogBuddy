@@ -55,7 +55,9 @@ jobs:
           tag_name: ${{ github.ref }}
           release_name: Release ${{ github.ref }}
           body: |
-            Automated Release by GitHub Action CI
+            Automated Release by GitHub Action CI. Before you download, make sure you've
+            familiarised yourself with the [risks](https://github.com/MrTipson/FogBuddy#risks)
+            and [personal responsibility](https://github.com/MrTipson/FogBuddy#personal-responsibility) sections.
           draft: false
           prerelease: true
       - name: Upload Release Asset (x86)
