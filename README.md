@@ -35,15 +35,15 @@ Every time you swap characters (or change UI size), you have to click on *recali
 The program works best if you have all perks on tier 3, it can handle missing DLCs/perks.
 
 #### Controls
-You can bring up the overlay using **Alt+E**. Close the overlay by clicking the 'x' in the upper right corner.
+You can toggle the overlay using **Alt+E**.
 
 When you click on a perk, a dot will appear next to the window name. Please do not move your mouse until the dot disappears.
 
 You can also use keyboard controls. Arrow keys move between different elements, space is used to select an item and tab is useful for focusing the input field.
-> Sometimes selecting a perk using space does not work first try. While this is being looked into, pay attention to the activity dot to see when its doing something.
+> Sometimes selecting a perk using space does not work first try. While this is being looked into, pay attention to the activity dot to see when its actually doing something.
 
 #### Logging
-If you've got 2 monitors, having the *FogBuddy* open on the side might be useful to notice if its having issues. If you submit any [issues](https://github.com/MrTipson/FogBuddy/issues), posting relevant debug log information could also be helpful in resolving them.
+If you've got 2 monitors, having the *FogBuddy* open on the side might be useful to notice if its having issues. If you submit any [issues](https://github.com/MrTipson/FogBuddy/issues), posting relevant debug log information could also be helpful in resolving them. But please don't post issues where the program just didnt find the perk, even if it was on the page. The detection accuracy is an ongoing battle and there is no need for additional issue posts.
 
 ## Cool! How does it work?
  - for more insight on the computer vision algorithms, I would suggest checking out the python notebooks in [extra](extra/).
@@ -59,6 +59,7 @@ You want to help? I've got a few things on the TO-DO list, such as:
  - improving template matching
  - improving robustness for different resolutions
  - supporting windowed mode
+ - ability to select perk slot to equip to
 
 , but if you have your own ideas, I'd be happy to hear them.
 

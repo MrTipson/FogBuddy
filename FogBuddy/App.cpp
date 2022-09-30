@@ -23,6 +23,8 @@ bool showSearch = false;
 bool focusFlag = false;
 // Pointer that ImGui radio buttons will change
 int* logLevel = (int*) Logger::getLogLevel();
+// Our Window
+HWND hwnd;
 
 // Main code
 int main(int argc, char** argv)
@@ -42,7 +44,7 @@ int main(int argc, char** argv)
     int width = GetSystemMetrics(SM_CXSCREEN);
     int height = GetSystemMetrics(SM_CYSCREEN);
     // Create window
-    HWND hwnd = CreateWindowEx(WS_EX_TOPMOST | WS_EX_LAYERED, wc.lpszClassName, _T("FogBuddy overlay"), WS_POPUP, 0, 0, width, height, NULL, NULL, wc.hInstance, NULL);
+    hwnd = CreateWindowEx(WS_EX_TOPMOST | WS_EX_LAYERED, wc.lpszClassName, _T("FogBuddy overlay"), WS_POPUP, 0, 0, width, height, NULL, NULL, wc.hInstance, NULL);
     SetLayeredWindowAttributes(hwnd, RGB(0,0,0), 0, LWA_COLORKEY); // Makes it so window bg is transparent
 
     // Grab DBD handle
@@ -108,10 +110,6 @@ int main(int argc, char** argv)
         if (done)
             break;
 
-        // Only show overlay if DBD is the foreground window
-        HWND fg = GetForegroundWindow();
-        bool isDBDForeground = fg == hwndDBD || fg == hwnd;
-
         // Adjust overlay to DBD window
         // For proper windowed mode support, window screenshots and CVController offsets must be implemented as well
         RECT rect;
@@ -132,7 +130,7 @@ int main(int argc, char** argv)
         ImVec2 size = { 500, 400 };
         ImGui::SetNextWindowSize(size);
         
-        if (isDBDForeground && showSearch && ImGui::Begin("FogBuddy perk search", &showSearch, window_flags))
+        if (ImGui::Begin("FogBuddy perk search", nullptr, window_flags))
         {
             // Recalibrate creates a new CVController (recalculate pages and perk size)
             if (ImGui::Button("Recalibrate"))
@@ -360,8 +358,10 @@ LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         switch (LOWORD(wParam))
         {
         case ID_OPEN_POPUP:
-            showSearch = true;
-            focusFlag = true;
+            // is window currently shown
+            ShowWindow(hwnd, showSearch ? SW_MINIMIZE : SW_RESTORE);
+            showSearch = !showSearch;
+            if(showSearch) focusFlag = true;
             break;
         }
         return 0;
