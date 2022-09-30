@@ -30,6 +30,7 @@ int main(int argc, char** argv)
     // Default log level is INFO
     *logLevel = Logger::INFO;
     std::cout << "\n\tFogBuddy console(don't close).\n\n";
+    std::cout << "Make sure you're familiarized with potential risks of using this (https://github.com/MrTipson/FogBuddy#risks)\n\n";
     PerkEquipper perkEquipper;
     // Create application window
     //ImGui_ImplWin32_EnableDpiAwareness();
@@ -48,7 +49,7 @@ int main(int argc, char** argv)
     HWND hwndDBD = FindWindow(_T("UnrealWindow"), _T("DeadByDaylight  "));
     if (hwndDBD == nullptr)
     {
-        LOG_INFO("Waiting for Dead by Daylight window.\n");
+        LOG_INFO("Waiting for the Dead by Daylight window.\n");
         while (hwndDBD == nullptr)
         {
             Sleep(2000);
@@ -70,7 +71,7 @@ int main(int argc, char** argv)
     UpdateWindow(hwnd);
 
     // Create hotkey to bring up the overlay (global)
-    RegisterHotKey(hwnd, ID_OPEN_POPUP, MOD_ALT, 0x53); // alt-S
+    RegisterHotKey(hwnd, ID_OPEN_POPUP, MOD_ALT, 0x45); // alt-E
 
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
@@ -86,6 +87,10 @@ int main(int argc, char** argv)
     ImGui_ImplWin32_Init(hwnd);
     ImGui_ImplDX11_Init(g_pd3dDevice, g_pd3dDeviceContext);
 
+    // Save desired action into variables instead of directly calling perkEquipper.equipPerk
+    int pendingAction = 0;
+    std::string perkPath;
+    bool isKillerPerk;
     // Main loop
     bool done = false;
     while (!done)
@@ -121,6 +126,7 @@ int main(int argc, char** argv)
         ImGui::NewFrame();
 
         ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize;
+        if (pendingAction > 0) window_flags |= ImGuiWindowFlags_UnsavedDocument;
         ImGui::SetNextWindowBgAlpha(0.35f); // Transparent background
 
         ImVec2 size = { 500, 400 };
@@ -135,6 +141,7 @@ int main(int argc, char** argv)
             }
             ImGui::SameLine();
 
+            ImGui::Text("Logging: "); ImGui::SameLine();
             // Selectors for log level
             ImGui::RadioButton("None", logLevel, Logger::NONE); ImGui::SameLine();
             ImGui::RadioButton("Info", logLevel, Logger::INFO); ImGui::SameLine();
@@ -173,11 +180,13 @@ int main(int argc, char** argv)
                 perksList = perkEquipper.killerPerks;
                 characters = perkEquipper.killers;
                 basePath = "data\\Killers\\";
+                isKillerPerk = true;
                 break;
             case 1: // Survivor
                 perksList = perkEquipper.survivorPerks;
                 characters = perkEquipper.survivors;
                 basePath = "data\\Survivors\\";
+                isKillerPerk = false;
                 break;
             default:
                 LOG_DEBUG("Side toggle sanity check failed.\n");
@@ -192,7 +201,8 @@ int main(int argc, char** argv)
                     if (filter.PassFilter(cstr)) {
                         // Each perk is a menu item
                         if (ImGui::MenuItem(cstr)) {
-                            perkEquipper.equipPerk(*it, true);
+                            pendingAction = 3;
+                            perkPath = *it;
                         }
                     }
                 }
@@ -217,13 +227,29 @@ int main(int argc, char** argv)
                                 const char* cstr = s.c_str();
                                 // that contains their teachables
                                 if (ImGui::MenuItem(cstr)) {
-                                    perkEquipper.equipPerk(basePath + character + "\\" + *it, true);
+                                    pendingAction = 3;
+                                    perkPath = basePath + character + "\\" + *it;
                                 }
                             }
                             ImGui::EndMenu();
                         }
                     }
                 }
+            }
+            // This shorcrictuits, so pendingAction doesnt go negative
+            /*
+                Why use pendingaction?
+
+                We want to wait for at least 1 frame to render before starting equipping perks.
+                Setting it to 2 didnt work, 3 seems fine. I have no idea why.
+
+                3 (perk clicked) -> 2 (supposedly unsaved document) -> 1 (start equip procedure) -> 0 (document saved)
+
+                This allows the 'UnsavedDocument' marker to appear, giving visual feedback when the tool is actively working
+            */
+            if (pendingAction > 0 && pendingAction-- == 1)
+            {
+                perkEquipper.equipPerk(perkPath, isKillerPerk);
             }
             ImGui::End();
         }
