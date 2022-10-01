@@ -69,7 +69,7 @@ int main(int argc, char** argv)
     }
     
     // Show the window
-    ShowWindow(hwnd, SW_SHOWMAXIMIZED);
+    ShowWindow(hwnd, SW_HIDE);
     UpdateWindow(hwnd);
 
     // Create hotkey to bring up the overlay (global)
@@ -148,11 +148,9 @@ int main(int argc, char** argv)
             // Input box and filtering for perks list
             static ImGuiTextFilter filter;
             filter.Draw();
-            
-            // Focus input if window just opened
-            if (focusFlag) {
-                LOG_DEBUG("Focusing\n");
-                SetForegroundWindow(hwnd);
+            ImGui::SetItemDefaultFocus();
+            if (focusFlag)
+            {
                 ImGui::SetKeyboardFocusHere(-1);
                 focusFlag = false;
             }
@@ -359,9 +357,9 @@ LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         {
         case ID_OPEN_POPUP:
             // is window currently shown
-            ShowWindow(hwnd, showSearch ? SW_MINIMIZE : SW_RESTORE);
+            ShowWindow(hwnd, showSearch ? SW_HIDE : SW_RESTORE);
             showSearch = !showSearch;
-            if(showSearch) focusFlag = true;
+            focusFlag = true;
             break;
         }
         return 0;
