@@ -80,6 +80,8 @@ void CVController::findPages(cv::Mat screen) {
 			pages.push_back({ x + 2, y + heightOffset + 2});
 		}
 	}
+	std::sort(pages.begin(), pages.end(), [](cv::Point a, cv::Point b)
+		{ return a.x < b.x; });
 	LOG_INFO("[Calibration]: Found %d pages\n", pages.size());
 }
 
