@@ -61,12 +61,14 @@ You want to help? I've got a few things on the TO-DO list, such as:
  - supporting windowed mode
  - ability to select perk slot to equip to
 
-, but if you have your own ideas, I'd be happy to hear them.
+but if you have your own ideas, I'd be happy to hear them.
+
+I'd also like to thank [Genergy](https://github.com/gendestry) for helping me with premake and C++ things.
 
 ## Building
 Clone the repository.
 
-```git clone https://github.com/MrTipson/FogBuddy.git```
+```git clone --recurse-submodules https://github.com/MrTipson/FogBuddy.git```
 
 Download the latest [premake](https://premake.github.io/) executable and check [here](https://premake.github.io/docs/using-premake) if your preferred way of building is available.
 
