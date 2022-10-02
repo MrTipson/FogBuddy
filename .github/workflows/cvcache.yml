@@ -1,0 +1,21 @@
+name: Cache
+on:
+  workflow_dispatch:
+jobs:
+  cache_opencv:
+    name: Create an opencv cache
+    runs-on: windows-2019
+    steps:
+      - uses: actions/cache@v3
+        id: cache
+        with:
+          path: opencv
+          key: opencv460
+      - name: Download opencv
+        if: steps.cache.outputs.cache-hit != 'true'
+        shell: powershell
+        run: Invoke-WebRequest -Uri https://github.com/opencv/opencv/releases/download/4.6.0/opencv-4.6.0-vc14_vc15.exe -OutFile opencv.exe
+      - name: Extract opencv
+        if: steps.cache.outputs.cache-hit != 'true'
+        shell: cmd
+        run: start /b /wait opencv.exe -o"." -y
