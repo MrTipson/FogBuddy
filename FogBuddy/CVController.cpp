@@ -90,7 +90,7 @@ Find perk on screen using perkPath as template and place the position in foundPe
 @returns bool: If matching was successful
 */
 bool CVController::findPerk(cv::Mat screen, std::string perkPath, cv::Point& foundPerk) {
-	int offsets[] = { -3,-2,-1,0,1,2,3 };
+	int offsets[] = { 0,1,2,3,-1,-2,-3 };
 
 	cv::Mat screenThresh, grayscale, template_, thresholded, resized, resizedMask;
 	cv::threshold(screen, screenThresh, 100, 255, cv::THRESH_TOZERO);
@@ -99,7 +99,7 @@ bool CVController::findPerk(cv::Mat screen, std::string perkPath, cv::Point& fou
 	cv::cvtColor(perk, template_, cv::COLOR_BGR2GRAY);
 	std::vector<cv::Mat> channels(4);
 	cv::split(perk, channels);
-	template_ = template_.mul(channels[3]);
+	template_ = template_.mul(channels[3])/255;
 	perk.release();
 
 	cv::threshold(template_, thresholded, 100, 255, cv::THRESH_TOZERO);
@@ -129,7 +129,7 @@ bool CVController::findPerk(cv::Mat screen, std::string perkPath, cv::Point& fou
 			opt_val = min_val;
 			opt_loc = min_loc;
 		}
-		if (opt_val < 0.4)
+		if (opt_val < 0.25)
 		{
 			LOG_DEBUG("ending early ");
 			break;
@@ -146,7 +146,7 @@ bool CVController::findPerk(cv::Mat screen, std::string perkPath, cv::Point& fou
 
 	// showMatch("Best match " + std::to_string(opt_val), screen, opt_loc, opt_val);
 
-	if (opt_val < 0.5)
+	if (opt_val < 0.4)
 	{
 		LOG_DEBUG("Found perk match (with error %.3f)\n", opt_val);
 		opt_loc.x += (int)(perkWidth / 2);
