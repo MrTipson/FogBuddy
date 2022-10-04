@@ -8,3 +8,4 @@
 #define ID_OPEN_POPUP 40001
 
 int main(int argc, char** argv);
+bool selectPerkSlot(int* perkSlot);

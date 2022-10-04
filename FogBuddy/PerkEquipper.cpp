@@ -12,7 +12,7 @@ High level to equip a perk
 @returns If procedure finished successfully.
 Note: This doesn't guarantee the perk is actually equipped (it could've also unequipped it or an error wasn't detected).
 */
-bool PerkEquipper::equipPerk(std::string perk, bool isKillerPerk) {
+bool PerkEquipper::equipPerk(int slot, std::string perk, bool isKillerPerk) {
 	if (controller == nullptr)
 	{
 		LOG_DEBUG("[Equip Perks]: Initializing CVController\n");
@@ -30,6 +30,11 @@ bool PerkEquipper::equipPerk(std::string perk, bool isKillerPerk) {
 	// Note: This assumes an uniform distribution of missing perks
 	double ratio = controller->pages.size() / ceil(1.0 * perks.size() / 15);
 	int expectedPage = (int)(perkIndex * ratio / 15);
+
+	cv::Point perkSlot = controller->loadoutPerks[slot];
+	LOG_INFO("[Equip Perks]: Selecting slot %d\n", slot + 1);
+	moveAndClickDBD(perkSlot.x, perkSlot.y);
+	Sleep(50);
 
 	cv::Point button = controller->pages[expectedPage];
 	// Print with + 1 so it matches in-game page numbers

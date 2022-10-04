@@ -93,6 +93,8 @@ int main(int argc, char** argv)
     int pendingAction = 0;
     std::string perkPath;
     bool isKillerPerk;
+    bool selectedSlot = false;
+    int perkSlot; // [0-3]
     // Main loop
     bool done = false;
     while (!done)
@@ -188,6 +190,8 @@ int main(int argc, char** argv)
                 LOG_DEBUG("Side toggle sanity check failed.\n");
                 continue;
             }
+            // Flag for opening popup because the popup didn't open when called from character teachables
+            bool openPopup = false;
             if (includePerks)
             {
                 for (auto& it = perksList.begin(); it != perksList.end(); it++)
@@ -197,6 +201,7 @@ int main(int argc, char** argv)
                     if (filter.PassFilter(cstr)) {
                         // Each perk is a menu item
                         if (ImGui::MenuItem(cstr)) {
+                            openPopup = true;
                             pendingAction = 3;
                             perkPath = *it;
                         }
@@ -223,6 +228,7 @@ int main(int argc, char** argv)
                                 const char* cstr = s.c_str();
                                 // that contains their teachables
                                 if (ImGui::MenuItem(cstr)) {
+                                    openPopup = true;
                                     pendingAction = 3;
                                     perkPath = basePath + character + "\\" + *it;
                                 }
@@ -231,6 +237,17 @@ int main(int argc, char** argv)
                         }
                     }
                 }
+            }
+            if (openPopup) {
+                ImGui::OpenPopup("slot");
+            }
+            if (ImGui::BeginPopup("slot")) {
+                if (ImGui::Button("1")) { perkSlot = 0; selectedSlot = true; } ImGui::SameLine();
+                if (ImGui::Button("2")) { perkSlot = 1; selectedSlot = true; } ImGui::SameLine();
+                if (ImGui::Button("3")) { perkSlot = 2; selectedSlot = true; } ImGui::SameLine();
+                if (ImGui::Button("4")) { perkSlot = 3; selectedSlot = true; }
+                if (selectedSlot) ImGui::CloseCurrentPopup();
+                ImGui::EndPopup();
             }
             // This shorcrictuits, so pendingAction doesnt go negative
             /*
@@ -243,9 +260,10 @@ int main(int argc, char** argv)
 
                 This allows the 'UnsavedDocument' marker to appear, giving visual feedback when the tool is actively working
             */
-            if (pendingAction > 0 && pendingAction-- == 1)
+            if (selectedSlot && pendingAction > 0 && pendingAction-- == 1)
             {
-                perkEquipper.equipPerk(perkPath, isKillerPerk);
+                perkEquipper.equipPerk(perkSlot, perkPath, isKillerPerk);
+                selectedSlot = false;
             }
             ImGui::End();
         }
