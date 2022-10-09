@@ -93,7 +93,7 @@ void CVController::findLoadout(cv::Mat screen) {
 	cv::Mat thresholded, morbed;
 	cv::threshold(screen, thresholded, 15, 255, cv::THRESH_BINARY_INV);
 
-	cv::Size seSize(25, 25);
+	cv::Size seSize(30, 30);
 	cv::morphologyEx(thresholded, morbed, cv::MORPH_CLOSE, cv::getStructuringElement(cv::MORPH_ELLIPSE, seSize));
 	thresholded.release();
 
@@ -101,24 +101,26 @@ void CVController::findLoadout(cv::Mat screen) {
 	int numLabels = cv::connectedComponentsWithStats(morbed, labels, stats, centroids, 8, CV_16U);
 	morbed.release();
 
-	std::vector<int> tops;
+	std::vector<int> bottoms;
 	std::vector<cv::Mat> perks;
 	for (int i = 0; i < numLabels; i++)
 	{
 		int area = stats.at<int>(i, cv::CC_STAT_AREA);
 		if (area > 300 && area < 2000 && abs(stats.at<int>(i, cv::CC_STAT_WIDTH) - perkWidth) < 10)
 		{
-			tops.push_back(stats.at<int>(i, cv::CC_STAT_TOP));
+			int bottom = stats.at<int>(i, cv::CC_STAT_TOP) + stats.at<int>(i, cv::CC_STAT_HEIGHT);
+			bottoms.push_back(bottom);
 			perks.push_back(stats.row(i));
 		}
 	}
 	// Calculate median value
-	std::sort(tops.begin(), tops.end());
-	int medianTop = tops.at((int)(tops.size() / 2));
+	std::sort(bottoms.begin(), bottoms.end());
+	int medianBottom = bottoms.at((int)(bottoms.size() / 2));
 
-	for (int i = 0; i < tops.size(); i++)
+	for (int i = 0; i < perks.size(); i++)
 	{
-		if (abs(perks[i].at<int>(0,cv::CC_STAT_TOP) - medianTop) < 10)
+		int bottom = perks[i].at<int>(0, cv::CC_STAT_TOP) + perks[i].at<int>(0, cv::CC_STAT_HEIGHT);
+		if (abs(bottom - medianBottom) < 10)
 		{
 			int x = perks[i].at<int>(0, cv::CC_STAT_LEFT) + perks[i].at<int>(0, cv::CC_STAT_WIDTH) / 2;
 			int y = perks[i].at<int>(0, cv::CC_STAT_TOP) + perks[i].at<int>(0, cv::CC_STAT_HEIGHT) / 2;
