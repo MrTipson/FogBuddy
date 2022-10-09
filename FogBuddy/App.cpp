@@ -19,8 +19,6 @@ LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 // Show the main window
 bool showSearch = false;
-// Focus filter input first time window opens
-bool focusFlag = false;
 // Pointer that ImGui radio buttons will change
 int* logLevel = (int*) Logger::getLogLevel();
 // Our Window
@@ -150,12 +148,6 @@ int main(int argc, char** argv)
             // Input box and filtering for perks list
             static ImGuiTextFilter filter;
             filter.Draw();
-            ImGui::SetItemDefaultFocus();
-            if (focusFlag)
-            {
-                ImGui::SetKeyboardFocusHere(-1);
-                focusFlag = false;
-            }
 
             // Choose between sides
             static int sideToggle = 0;
@@ -377,7 +369,7 @@ LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             // is window currently shown
             ShowWindow(hwnd, showSearch ? SW_HIDE : SW_RESTORE);
             showSearch = !showSearch;
-            focusFlag = true;
+            if (showSearch) SetForegroundWindow(hWnd);
             break;
         }
         return 0;
