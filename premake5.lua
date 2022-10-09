@@ -35,7 +35,7 @@ project "FogBuddy"
 	objdir	  "bin-int/%{cfg.buildcfg}/%{prj.name}"
 	debugdir  "%{cfg.targetdir}"
 
-	files { "%{prj.location}/**.h", "%{prj.location}/**.cpp", "%{prj.location}/**.hpp" }
+	files { "%{prj.location}/**.h", "%{prj.location}/**.cpp", "%{prj.location}/**.hpp", "%{prj.location}/**.rc" }
 	cppdialect "C++17"
 
 	if _OPTIONS["opencv"] == nil then
