@@ -51,7 +51,7 @@ void CVController::calibrate(cv::Mat screen) {
 void CVController::findPages(cv::Mat screen) {
 	cv::Mat thresholded, morbed;
 
-	cv::threshold(screen, thresholded, 130, 255, cv::THRESH_BINARY);
+	cv::threshold(screen, thresholded, 230, 255, cv::THRESH_BINARY);
 
 	cv::Size seSize(20, 20);
 	cv::morphologyEx(thresholded, morbed, cv::MORPH_DILATE, cv::getStructuringElement(cv::MORPH_ELLIPSE, seSize));
