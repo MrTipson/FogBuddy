@@ -76,12 +76,14 @@ void CVController::findPages(cv::Mat screen) {
 	for (int i = 0; i < numLabels; i++)
 	{
 		int top = stats.at<int>(i, cv::CC_STAT_TOP);
+		int left = stats.at<int>(i, cv::CC_STAT_LEFT);
 		// Only use the values that don't deviate too far from the median
-		if (abs(top - median) < 20)
+		if (abs(top - median) < 20 && left > 0.25 * width / 2 && left < 0.75 * width / 2)
 		{
 			int x = stats.at<int>(i, cv::CC_STAT_LEFT) + stats.at<int>(i, cv::CC_STAT_WIDTH) / 2;
 			int y = stats.at<int>(i, cv::CC_STAT_TOP) + stats.at<int>(i, cv::CC_STAT_HEIGHT) / 2;
 			pages.push_back({ x + 2, y + heightOffset + 2});
+			LOG_DEBUG("[Calibration]: Page (%d,%d)\n", x + 2, y + heightOffset + 2);
 		}
 	}
 	std::sort(pages.begin(), pages.end(), [](cv::Point a, cv::Point b)
