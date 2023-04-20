@@ -26,15 +26,39 @@ bool PerkEquipper::equipPerk(int slot, std::string perk, bool isKillerPerk) {
 		LOG_DEBUG("[Equip Perks]: Equip perk sanity check failed\n");
 		return false;
 	}
-	// If not all perks are unlocked, figure out what percentage are missing
-	// Note: This assumes an uniform distribution of missing perks
-	double ratio = controller->pages.size() / ceil(1.0 * perks.size() / 15);
-	int expectedPage = (int)(perkIndex * ratio / 15);
 
 	cv::Point perkSlot = controller->loadoutPerks[slot];
 	LOG_INFO("[Equip Perks]: Selecting slot %d\n", slot + 1);
 	moveAndClickDBD(perkSlot.x, perkSlot.y);
 	Sleep(50);
+
+	// Temporary (?) workaround for the fact that one of the pages can be hidden ever since survivors have 9 of them
+	if (!isKillerPerk && controller->pages.size() >= 8)
+	{
+		int x0 = controller->pages[0].x;
+		int x1 = controller->pages[1].x;
+		int x2 = controller->pages[2].x;
+		int pageIndex = 4;
+
+		// Try to detect if page 2 is a gap (has '...' instead of the button)
+		if ((x1 - x0) > 1.5 * (x2 - x1))
+		{
+			LOG_INFO("[Equip Perks]: Left gap detected");
+			pageIndex--;
+		}
+
+		cv::Point button = controller->pages[pageIndex];
+		LOG_DEBUG("[Equip Perks]: Clicking page 5 (survivor workaround)\n");
+		moveAndClickDBD(button.x, button.y);
+		Sleep(500);
+		recalibrate();
+	}
+
+	// If not all perks are unlocked, figure out what percentage are missing
+	// Note: This assumes an uniform distribution of missing perks
+	double ratio = controller->pages.size() / ceil(1.0 * perks.size() / 15);
+	int expectedPage = (int)(perkIndex * ratio / 15);
+
 
 	cv::Point button = controller->pages[expectedPage];
 	// Print with + 1 so it matches in-game page numbers
