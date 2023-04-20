@@ -3,6 +3,11 @@
 FogBuddy is a third party application that allows searching and automatic equipping of perks in the game Dead by Daylight.
 Its implemented entirely using computer vision and doesn't mess with any game files whatsoever.
 
+Here is a quick demo, although it does not show some features, which have been added since:
+
+https://user-images.githubusercontent.com/37011447/233488966-e2d30c5d-1f5a-4dd0-9891-0088e5e16abb.mp4
+
+
 ## Risks
 Before going forward, its important to assess the risks associated with this. The relevant documents for this are the [Game rules](https://forum.deadbydaylight.com/en/discussion/19450/game-rules-and-report-system), [Terms of use](https://www.bhvr.com/terms-of-use/) and the [End user licencing aggrement](https://deadbydaylight.com/eula) (**EULA**  from now on).
 
