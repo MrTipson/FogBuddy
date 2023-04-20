@@ -59,7 +59,6 @@ You want to help? I've got a few things on the TO-DO list, such as:
  - improving template matching
  - improving robustness for different resolutions
  - supporting windowed mode
- - ability to select perk slot to equip to
 
 but if you have your own ideas, I'd be happy to hear them.
 
